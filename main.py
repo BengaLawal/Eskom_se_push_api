@@ -1,7 +1,11 @@
 import requests
 import os
+from datetime import datetime, timedelta
 
 licence_key = os.environ.get("LICENSE_KEY")
+
+today = datetime.today().strftime('%Y-%m-%d')
+tomorrow = (datetime.today() + timedelta(days=1)).strftime('%Y-%m-%d')
 
 header = {
     "token": licence_key
@@ -23,8 +27,16 @@ def main():
             start_date = (event["start"].split("T"))[0]
             start_time = event["start"].split("T")[1][:5]
             end_time = event["end"].split("T")[1][:5]
-            print(f"{stage}\n{start_date}\nStart {start_time}\nEnd {end_time}")
-            print("-----------")
+
+            if str(today) == str(start_date):
+                print("Today")
+                print(f"{stage}\n{start_date}\nStart {start_time}\nEnd {end_time}")
+                print("-----------")
+            elif str(start_date) == str(tomorrow):
+                print("Tomorrow")
+                print(f"{stage}\n{start_date}\nStart {start_time}\nEnd {end_time}")
+                print("-----------")
+
     print(check_allowance())
 
 
