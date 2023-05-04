@@ -2,6 +2,7 @@ import requests
 import os
 from datetime import datetime
 from twilio.rest import Client
+from twilio.http.http_client import TwilioHttpClient
 
 # check if test parameter in area_information() is commented
 
@@ -47,9 +48,9 @@ def area_information():
     url = "https://developer.sepush.co.za/business/2.0/area"
     parameters = {
         "id": f"{area_id}",  # id received from checking get_area_id()
-        # "test": "current"  # set to current or future -- only use when you're testing and don't need current data -- won't count as a call against your quota
+        "test": "current"  # set to current or future -- only use when you're testing and don't need current data -- won't count as a call against your quota
     }
-    response = requests.get(url=url, params=parameters, headers=header)
+    response = requests.get(url=url, params=parameters, headers=header, verify=False)
     return response.json()
 
 def check_allowance():
@@ -61,7 +62,9 @@ def check_allowance():
 
 def notification(message_):
     """Send notification to whatsapp"""
-    client = Client(twilio_account_sid, twilio_auth_token)
+    proxy_client = TwilioHttpClient()
+    proxy_client.session.proxies = {'https': os.environ['https_proxy']}
+    client = Client(twilio_account_sid, twilio_auth_token, http_client=proxy_client)
     message = client.messages\
         .create(
             from_=f"whatsapp:+{twilio_number}",
