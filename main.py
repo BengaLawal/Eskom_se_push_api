@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 licence_key = os.environ.get("LICENSE_KEY")
 
 today = datetime.today().strftime('%Y-%m-%d')
+
 tomorrow = (datetime.today() + timedelta(days=1)).strftime('%Y-%m-%d')
 
 header = {
