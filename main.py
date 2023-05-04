@@ -55,7 +55,7 @@ def area_information():
     url = "https://developer.sepush.co.za/business/2.0/area"
     parameters = {
         "id": f"{area_id}",  # id received from checking get_area_id()
-        "test": "current"  # set to current or future -- only use when you're testing and don't need current data
+        "test": "current"  # set to current or future -- only use when you're testing and don't need current data -- won't count as a call against your quota
     }
     response = requests.get(url=url, params=parameters, headers=header)
     return response.json()
