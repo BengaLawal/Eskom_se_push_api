@@ -2,7 +2,7 @@ import requests
 import os
 from datetime import datetime
 from twilio.rest import Client
-from twilio.http.http_client import TwilioHttpClient
+# from twilio.http.http_client import TwilioHttpClient
 
 # check if test parameter in area_information() is commented
 
@@ -14,6 +14,7 @@ my_number = os.environ.get("MY_NUMBER")
 
 today = datetime.today().strftime('%Y-%m-%d')
 
+area = "muizenberg"
 area_id = "capetown-8-muizenberg"  # Feel free to change id to area you want info on
 
 header = {
@@ -30,13 +31,16 @@ def main():
 def get_area_id():
     """Search for an area and look for its id.
     Counts as 5 calls towards quota"""
-    area = "muizenberg"
     url = "https://developer.sepush.co.za/business/2.0/areas_search"
     parameters = {
         "text": area
     }
     response = requests.get(url=url, params=parameters, headers=header)
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        print(f"Error: {e}")
+        return None
     # data = response.json()
     # return data["areas"][0]["id"]
     return response.text
@@ -48,9 +52,14 @@ def area_information():
     url = "https://developer.sepush.co.za/business/2.0/area"
     parameters = {
         "id": f"{area_id}",  # id received from checking get_area_id()
-        "test": "current"  # set to current or future -- only use when you're testing and don't need current data -- won't count as a call against your quota
+        # "test": "current"  # set to current or future -- only use when you're testing and don't need current data -- won't count as a call against your quota
     }
-    response = requests.get(url=url, params=parameters, headers=header, verify=False)
+    response = requests.get(url=url, params=parameters, headers=header)
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        print(f"Error: {e}")
+        return None
     return response.json()
 
 def check_allowance():
@@ -62,16 +71,17 @@ def check_allowance():
 
 def notification(message_):
     """Send notification to whatsapp"""
-    proxy_client = TwilioHttpClient()
-    proxy_client.session.proxies = {'https': os.environ['https_proxy']}
-    client = Client(twilio_account_sid, twilio_auth_token, http_client=proxy_client)
+    # proxy_client = TwilioHttpClient()
+    # proxy_client.session.proxies = {'https': os.environ['https_proxy']}
+    # proxy_client = TwilioHttpClient(proxy={'http': os.environ['http_proxy'], 'https': os.environ['https_proxy']})
+    client = Client(twilio_account_sid, twilio_auth_token)
     message = client.messages\
         .create(
             from_=f"whatsapp:+{twilio_number}",
             body=f"{message_}",
             to=f"whatsapp:+{my_number}"
     )
-    # print(message.status)
+    print(message.status)
 
 def send_schedule(schedule):
     """Sends load shedding times for the day to whatsapp.
@@ -87,7 +97,7 @@ def send_schedule(schedule):
                 todays_loadshedding.append(event)
         for shed in todays_loadshedding:
             notification(
-                f"🚨LOADSHEDDING🚨\nStart - {shed['start'].split('T')[1][:5]}\nEnd - {shed['end'].split('T')[1][:5]}")
+                f"🚨LOADSHEDDING🚨\n{shed['start'].split('T')[1][:5]} - {shed['end'].split('T')[1][:5]}")
 
 if __name__ == '__main__':
     main()
